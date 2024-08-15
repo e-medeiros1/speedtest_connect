@@ -33,7 +33,7 @@ class _SpeedtestConnectState extends State<SpeedtestConnect> {
     });
   }
 
-  Widget _getRadialGauge() {
+  Widget _downloadGauge() {
     return SfRadialGauge(axes: <RadialAxis>[
       RadialAxis(
         canRotateLabels: true,
@@ -62,7 +62,46 @@ class _SpeedtestConnectState extends State<SpeedtestConnect> {
         ],
         pointers: <GaugePointer>[
           NeedlePointer(
-            value: _downloadProgress != '100' ? _downloadRate : _uploadRate,
+            value: _downloadRate,
+            animationType: AnimationType.elasticOut,
+            animationDuration: 3000,
+            enableAnimation: true,
+          )
+        ],
+      )
+    ]);
+  }
+
+  Widget _uploadGauge() {
+    return SfRadialGauge(axes: <RadialAxis>[
+      RadialAxis(
+        canRotateLabels: true,
+        minimum: 0,
+        maximum: 150,
+        ranges: <GaugeRange>[
+          GaugeRange(
+              startValue: 0,
+              endValue: 50,
+              color: Colors.purple[200],
+              startWidth: 10,
+              endWidth: 10),
+          GaugeRange(
+              startValue: 50,
+              endValue: 100,
+              color: Colors.purple[500],
+              startWidth: 10,
+              endWidth: 10),
+          GaugeRange(
+            startValue: 100,
+            endValue: 150,
+            color: Colors.purple[700],
+            startWidth: 10,
+            endWidth: 10,
+          )
+        ],
+        pointers: <GaugePointer>[
+          NeedlePointer(
+            value: _uploadRate,
             animationType: AnimationType.elasticOut,
             animationDuration: 3000,
             enableAnimation: true,
@@ -99,7 +138,8 @@ class _SpeedtestConnectState extends State<SpeedtestConnect> {
                 style: const TextStyle(fontSize: 30.0),
               ),
             ),
-            _getRadialGauge(),
+            if (_downloadProgress != '100') _downloadGauge(),
+            if (_downloadProgress == '100') _uploadGauge(),
             const Text(
               "Download:",
               style: TextStyle(fontSize: 22.0),
