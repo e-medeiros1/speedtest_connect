@@ -12,18 +12,18 @@ class SpeedtestConnect extends StatefulWidget {
 class _SpeedtestConnectState extends State<SpeedtestConnect> {
   final internetSpeedTest = FlutterInternetSpeedTest()..enableLog();
 
-  bool testInProgress = false;
-  double downloadRate = 0;
+  bool _testInProgress = false;
+  double _downloadRate = 0;
+  double _uploadRate = 0;
+  String _downloadProgress = '0';
+  String _uploadProgress = '0';
+  int _downloadCompletionTime = 0;
+  int _uploadCompletionTime = 0;
+  bool _isServerSelected = false;
+  final double _displayNumber = 0.0;
+  String _myIp = '';
 
-  String downloadProgress = '0';
-
-  int downloadCompletionTime = 0;
-
-  bool isServerSelected = false;
-  double displayNumber = 0.0;
-  String myIp = '';
-
-  String unitText = 'Mbps';
+  String _unitText = 'Mbps';
 
   @override
   void initState() {
@@ -35,134 +35,203 @@ class _SpeedtestConnectState extends State<SpeedtestConnect> {
 
   Widget _getRadialGauge() {
     return SfRadialGauge(axes: <RadialAxis>[
-      RadialAxis(canRotateLabels: true, minimum: 0, maximum: 150, ranges: <GaugeRange>[
-        GaugeRange(
-            startValue: 0,
-            endValue: 50,
-            color: Colors.green,
+      RadialAxis(
+        canRotateLabels: true,
+        minimum: 0,
+        maximum: 150,
+        ranges: <GaugeRange>[
+          GaugeRange(
+              startValue: 0,
+              endValue: 50,
+              color: Colors.green,
+              startWidth: 10,
+              endWidth: 10),
+          GaugeRange(
+              startValue: 50,
+              endValue: 100,
+              color: Colors.orange,
+              startWidth: 10,
+              endWidth: 10),
+          GaugeRange(
+            startValue: 100,
+            endValue: 150,
+            color: Colors.red,
             startWidth: 10,
-            endWidth: 10),
-        GaugeRange(
-            startValue: 50,
-            endValue: 100,
-            color: Colors.orange,
-            startWidth: 10,
-            endWidth: 10),
-        GaugeRange(
-          startValue: 100,
-          endValue: 150,
-          color: Colors.red,
-          startWidth: 10,
-          endWidth: 10,
-        )
-      ], pointers: <GaugePointer>[
-        NeedlePointer(
-          value: downloadRate,
-          animationType: AnimationType.elasticOut,
-          animationDuration: 3000,
-          enableAnimation: true,
-        )
-      ], annotations: <GaugeAnnotation>[
-        GaugeAnnotation(
-            widget: Text(
-              '${downloadRate.toStringAsFixed(2)} $unitText',
-              style: const TextStyle(fontSize: 30, fontWeight: FontWeight.bold),
-            ),
-            angle: 90,
-            positionFactor: 1.1)
-      ])
+            endWidth: 10,
+          )
+        ],
+        pointers: <GaugePointer>[
+          NeedlePointer(
+            value: _downloadProgress != '100' ? _downloadRate : _uploadRate,
+            animationType: AnimationType.elasticOut,
+            animationDuration: 3000,
+            enableAnimation: true,
+          )
+        ],
+      )
     ]);
   }
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-        appBar: AppBar(
-          title: const Text(
-            'Teste de velocidade',
-            style: TextStyle(fontSize: 25.0, fontWeight: FontWeight.bold),
-          ),
-          centerTitle: true,
-        ),
+    return SafeArea(
+      child: Scaffold(
         body: Column(
-          mainAxisAlignment: MainAxisAlignment.spaceAround,
+          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
           children: [
-            if (testInProgress)
-              Text(
-                isServerSelected ? 'Procurando servidor...' : myIp,
+            const Padding(
+              padding: EdgeInsets.all(20.0),
+              child: Align(
+                child: Text(
+                  'Teste de velocidade',
+                  style: TextStyle(fontSize: 25.0, fontWeight: FontWeight.bold),
+                ),
+              ),
+            ),
+            const Text(
+              "Seu IP:",
+              style: TextStyle(fontSize: 22.0),
+            ),
+            Padding(
+              padding: const EdgeInsets.all(20),
+              child: Text(
+                _isServerSelected ? 'Procurando servidor...' : _myIp,
                 style: const TextStyle(fontSize: 30.0),
               ),
-            if (testInProgress)
-              AnimatedContainer(
-                  duration: const Duration(seconds: 1), child: _getRadialGauge()),
-            Center(
-              child: Column(
-                children: [
-                  ElevatedButton(
-                    child: Text(
-                      downloadProgress != '100' ? 'Começar teste' : 'Recomeçar teste',
-                      style: const TextStyle(fontSize: 22),
+            ),
+            _getRadialGauge(),
+            const Text(
+              "Download:",
+              style: TextStyle(fontSize: 22.0),
+            ),
+            Text(
+              _downloadRate.toStringAsFixed(2) + _unitText,
+              style: const TextStyle(fontSize: 30.0),
+            ),
+            const Text(
+              "Upload:",
+              style: TextStyle(fontSize: 22.0),
+            ),
+            Text(
+              _uploadRate.toStringAsFixed(2) + _unitText,
+              style: const TextStyle(fontSize: 30.0),
+            ),
+            if (!_testInProgress) ...{
+              Padding(
+                  padding: const EdgeInsets.all(40),
+                  child: ElevatedButton(
+                    style: ButtonStyle(
+                      shape: WidgetStateProperty.all(
+                        const RoundedRectangleBorder(
+                            borderRadius: BorderRadius.all(Radius.circular(25)),
+                            side: BorderSide(
+                              color: Colors.white,
+                              width: 1,
+                            )),
+                      ),
+                    ),
+                    child: const Text(
+                      'Começar teste',
+                      style: TextStyle(fontSize: 22, color: Colors.white),
                     ),
                     onPressed: () async {
                       reset();
                       await internetSpeedTest.startTesting(onStarted: () {
-                        setState(() => testInProgress = true);
+                        setState(() => _testInProgress = true);
                       }, onCompleted: (TestResult download, TestResult upload) {
                         setState(() {
-                          downloadRate = download.transferRate;
-                          unitText = download.unit == SpeedUnit.kbps ? 'Kbps' : 'Mbps';
-                          downloadProgress = '100';
-                          downloadCompletionTime = download.durationInMillis;
+                          _downloadRate = download.transferRate;
+                          _unitText = download.unit == SpeedUnit.kbps ? 'Kbps' : 'Mbps';
+                          _downloadProgress = '100';
+                          _downloadCompletionTime = download.durationInMillis;
+                        });
+                        setState(() {
+                          _uploadRate = upload.transferRate;
+                          _unitText = upload.unit == SpeedUnit.kbps ? 'Kbps' : 'Mbps';
+                          _uploadProgress = '100';
+                          _uploadCompletionTime = upload.durationInMillis;
+                          _testInProgress = false;
                         });
                       }, onProgress: (double percent, TestResult data) {
                         setState(() {
-                          unitText = data.unit == SpeedUnit.kbps ? 'Kbps' : 'Mbps';
+                          _unitText = data.unit == SpeedUnit.kbps ? 'Kbps' : 'Mbps';
                           if (data.type == TestType.download) {
-                            downloadRate = data.transferRate;
-                            downloadProgress = percent.toStringAsFixed(2);
+                            _downloadRate = data.transferRate;
+                            _downloadProgress = percent.toStringAsFixed(2);
+                          } else {
+                            _uploadRate = data.transferRate;
+                            _uploadProgress = percent.toStringAsFixed(2);
                           }
                         });
                       }, onError: (String errorMessage, String speedTestError) {
                         reset();
                       }, onDefaultServerSelectionInProgress: () {
                         setState(() {
-                          isServerSelected = true;
+                          _isServerSelected = true;
                         });
                       }, onDefaultServerSelectionDone: (Client? client) {
                         setState(() {
-                          isServerSelected = false;
-                          myIp = client?.ip ?? '--';
+                          _isServerSelected = false;
+                          _myIp = client?.ip ?? '';
                         });
                       }, onDownloadComplete: (TestResult data) {
                         setState(() {
-                          downloadRate = data.transferRate;
-                          unitText = data.unit == SpeedUnit.kbps ? 'Kbps' : 'Mbps';
-                          downloadCompletionTime = data.durationInMillis;
+                          _downloadRate = data.transferRate;
+                          _unitText = data.unit == SpeedUnit.kbps ? 'Kbps' : 'Mbps';
+                          _downloadCompletionTime = data.durationInMillis;
+                        });
+                      }, onUploadComplete: (TestResult data) {
+                        setState(() {
+                          _uploadRate = data.transferRate;
+                          _unitText = data.unit == SpeedUnit.kbps ? 'Kbps' : 'Mbps';
+                          _uploadCompletionTime = data.durationInMillis;
                         });
                       }, onCancel: () {
                         reset();
                       });
                     },
-                  )
-                ],
-              ),
-            ),
+                  )),
+            } else ...{
+              Padding(
+                  padding: const EdgeInsets.all(40),
+                  child: ElevatedButton.icon(
+                    style: ButtonStyle(
+                      shape: WidgetStateProperty.all(
+                        const RoundedRectangleBorder(
+                            borderRadius: BorderRadius.all(Radius.circular(25)),
+                            side: BorderSide(
+                              color: Colors.white,
+                              width: 1,
+                            )),
+                      ),
+                    ),
+                    onPressed: () => internetSpeedTest.cancelTest(),
+                    icon: Icon(Icons.cancel_rounded, color: Colors.red[300]),
+                    label: const Text(
+                      'Cancelar',
+                      style: TextStyle(fontSize: 22, color: Colors.white),
+                    ),
+                  )),
+            },
           ],
-        ));
+        ),
+      ),
+    );
   }
 
   void reset() {
     setState(() {
       {
-        testInProgress = false;
-        downloadRate = 0;
+        _testInProgress = false;
+        _downloadRate = 0;
+        _uploadRate = 0;
+        _downloadProgress = '0';
+        _uploadProgress = '0';
+        _unitText = 'Mbps';
+        _downloadCompletionTime = 0;
+        _uploadCompletionTime = 0;
 
-        downloadProgress = '0';
-
-        unitText = 'Mbps';
-        downloadCompletionTime = 0;
-
-        myIp = '';
+        _myIp = '';
       }
     });
   }
