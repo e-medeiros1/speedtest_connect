@@ -22,6 +22,7 @@ class _SpeedtestConnectState extends State<SpeedtestConnect> {
   bool _isServerSelected = false;
   final double _displayNumber = 0.0;
   String _myIp = '';
+  bool _isDownloadComplete = false;
 
   String _unitText = 'Mbps';
 
@@ -138,8 +139,11 @@ class _SpeedtestConnectState extends State<SpeedtestConnect> {
                 style: const TextStyle(fontSize: 30.0),
               ),
             ),
-            if (_downloadProgress != '100') _downloadGauge(),
-            if (_downloadProgress == '100') _uploadGauge(),
+            if (_testInProgress)
+              AnimatedContainer(
+                duration: const Duration(milliseconds: 1000),
+                child: _isDownloadComplete ? _uploadGauge() : _downloadGauge(),
+              ),
             const Text(
               "Download:",
               style: TextStyle(fontSize: 22.0),
@@ -216,6 +220,7 @@ class _SpeedtestConnectState extends State<SpeedtestConnect> {
                         });
                       }, onDownloadComplete: (TestResult data) {
                         setState(() {
+                          _isDownloadComplete = true;
                           _downloadRate = data.transferRate;
                           _unitText = data.unit == SpeedUnit.kbps ? 'Kbps' : 'Mbps';
                           _downloadCompletionTime = data.durationInMillis;
@@ -270,7 +275,7 @@ class _SpeedtestConnectState extends State<SpeedtestConnect> {
         _unitText = 'Mbps';
         _downloadCompletionTime = 0;
         _uploadCompletionTime = 0;
-
+        _isDownloadComplete = false;
         _myIp = '';
       }
     });
