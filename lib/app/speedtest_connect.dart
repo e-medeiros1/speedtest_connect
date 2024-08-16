@@ -139,11 +139,10 @@ class _SpeedtestConnectState extends State<SpeedtestConnect> {
                 style: const TextStyle(fontSize: 30.0),
               ),
             ),
-            if (_testInProgress)
-              AnimatedContainer(
-                duration: const Duration(milliseconds: 1000),
-                child: _isDownloadComplete ? _uploadGauge() : _downloadGauge(),
-              ),
+            AnimatedContainer(
+              duration: const Duration(milliseconds: 1000),
+              child: _isDownloadComplete ? _uploadGauge() : _downloadGauge(),
+            ),
             const Text(
               "Download:",
               style: TextStyle(fontSize: 22.0),
@@ -212,11 +211,12 @@ class _SpeedtestConnectState extends State<SpeedtestConnect> {
                       }, onDefaultServerSelectionInProgress: () {
                         setState(() {
                           _isServerSelected = true;
+                          _myIp = '--';
                         });
                       }, onDefaultServerSelectionDone: (Client? client) {
                         setState(() {
                           _isServerSelected = false;
-                          _myIp = client?.ip ?? '';
+                          _myIp = client?.ip ?? '--';
                         });
                       }, onDownloadComplete: (TestResult data) {
                         setState(() {
