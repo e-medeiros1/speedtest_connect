@@ -45,7 +45,7 @@ class _SpeedtestConnectState extends State<SpeedtestConnect> {
               startValue: 0,
               endValue: 50,
               color: Colors.green,
-              startWidth: 10,
+              startWidth: 15,
               endWidth: 10),
           GaugeRange(
               startValue: 50,
@@ -58,7 +58,7 @@ class _SpeedtestConnectState extends State<SpeedtestConnect> {
             endValue: 150,
             color: Colors.red,
             startWidth: 10,
-            endWidth: 10,
+            endWidth: 15,
           )
         ],
         pointers: <GaugePointer>[
@@ -84,7 +84,7 @@ class _SpeedtestConnectState extends State<SpeedtestConnect> {
               startValue: 0,
               endValue: 50,
               color: Colors.purple[200],
-              startWidth: 10,
+              startWidth: 15,
               endWidth: 10),
           GaugeRange(
               startValue: 50,
@@ -97,7 +97,7 @@ class _SpeedtestConnectState extends State<SpeedtestConnect> {
             endValue: 150,
             color: Colors.purple[700],
             startWidth: 10,
-            endWidth: 10,
+            endWidth: 15,
           )
         ],
         pointers: <GaugePointer>[
@@ -185,13 +185,11 @@ class _SpeedtestConnectState extends State<SpeedtestConnect> {
                         setState(() {
                           _downloadRate = download.transferRate;
                           _unitText = download.unit == SpeedUnit.kbps ? 'Kbps' : 'Mbps';
-                          _downloadProgress = '100';
                           _downloadCompletionTime = download.durationInMillis;
                         });
                         setState(() {
                           _uploadRate = upload.transferRate;
                           _unitText = upload.unit == SpeedUnit.kbps ? 'Kbps' : 'Mbps';
-                          _uploadProgress = '100';
                           _uploadCompletionTime = upload.durationInMillis;
                           _testInProgress = false;
                         });
